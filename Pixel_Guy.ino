@@ -90,6 +90,15 @@
       arduboy.drawBitmap(x, y, standingR, WIDTH, HEIGHT, 1);
     }
   }
+
+  void notVisible(){
+    if(x <= 250 && x >= 240 ){
+      x = 128;
+    }
+    if(x >= 133 && x <= 140){
+      x = 252;
+    }
+  }
   
   void loop() {
     if (!(arduboy.nextFrame()))
@@ -108,7 +117,9 @@
       walkFase = 1;
     }
 
-    delay(35);
+    notVisible();
+
+    delay(35); //Perfect delay 35
 
     arduboy.display();
   }
