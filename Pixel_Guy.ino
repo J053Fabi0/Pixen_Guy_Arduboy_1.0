@@ -12,8 +12,10 @@
   int state;
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
+  int jumpCount = 1;
   
-  bool jumping = false; 
+  bool jumping = false;
+  bool gRunning = false;
   
   void setup() {
     arduboy.beginNoLogo();
@@ -99,6 +101,37 @@
       x = 252;
     }
   }
+
+  void jumpNextFrame(int fase, int dir){
+    if(dir == 1){
+      if(fase >= 1 && fase <= 8){
+        arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
+        y = y - 2;
+      }else if(fase >= 8 && fase <= 16){
+        arduboy.drawBitmap(x, y, fallL, WIDTH, HEIGHT, 1);
+        y = y + 2;
+      }
+    }else if(dir == 2){
+      if(fase >= 1 && fase <= 8){
+        arduboy.drawBitmap(x, y, jumpR, WIDTH, HEIGHT, 1);
+        y = y - 2;
+      }else if(fase >= 8 && fase <= 16){
+        arduboy.drawBitmap(x, y, fallR, WIDTH, HEIGHT, 1);
+        y = y + 2;
+      }
+    }
+  }
+
+  void jump(){
+    if(jumpCount >= 1 && jumpCount <= 16){
+      jumpNextFrame(jumpCount, guy_dir);
+      jumpCount++;
+    }else{
+      jumpCount = 1;
+      jumping = false;
+      stand(guy_dir);
+    }
+  }
   
   void loop() {
     if (!(arduboy.nextFrame()))
@@ -106,16 +139,31 @@
       
     arduboy.clear();
   
-    if(arduboy.pressed(LEFT_BUTTON)){
+    if(arduboy.pressed(LEFT_BUTTON) && !jumping){
       guy_dir = 1;
       walk(guy_dir);
-    }else if(arduboy.pressed(RIGHT_BUTTON)){
+      gRunning = true;
+    }else if(arduboy.pressed(RIGHT_BUTTON) && !jumping){
       guy_dir = 2;
       walk(guy_dir);
-    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON) && !arduboy.pressed(DOWN_BUTTON)){
+      gRunning = true;
+    }else if(arduboy.pressed(UP_BUTTON) && !gRunning){
+      jumping = true;
+    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON) && !arduboy.pressed(DOWN_BUTTON) && !jumping){
       stand(guy_dir);
       walkFase = 1;
+      gRunning = false;
+      jumping = false;
     }
+
+    if(jumping){
+      jump();
+    }
+
+    arduboy.setCursor(0, 0);
+    arduboy.print(guy_dir);
+    arduboy.setCursor(8, 0);
+    arduboy.print(jumping);
 
     notVisible();
 
