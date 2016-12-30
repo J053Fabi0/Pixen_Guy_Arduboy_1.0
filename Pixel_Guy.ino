@@ -6,21 +6,27 @@
   
   #define WIDTH 12
   #define HEIGHT 18
+
+  const int XTAM = 128; //El tamaño de la pantalla
+  const int YTAM = 64;
+  const float GRAV = 0.4;
   
-  byte x = 58;
-  byte y = 46;
-  int state;
+  float x = 58;
+  float y = 46;
+  float dy = 0; //Velocidad (lo que se le suma a y por frame)
+  
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
-  int jumpCount = 1;
   
-  bool jumping = false;
+  bool ascending = false;
+  bool falling = false;
+  bool onGround = true;
   bool gRunning = false;
+  bool jumping = false;
   
   void setup() {
     arduboy.beginNoLogo();
-    arduboy.setFrameRate(60);
-    
+    arduboy.setFrameRate(35);
   }
   
   void nextWalkFrame(int fase, int dir){
@@ -94,43 +100,50 @@
   }
 
   void notVisible(){
-    if(x <= 250 && x >= 240 ){
-      x = 128;
+    if(x <= -16 && x >= -20 ){
+      x = 136;
     }
-    if(x >= 133 && x <= 140){
-      x = 252;
+    if(x >= 138 && x <= 140){
+      x = -14;
     }
   }
 
-  void jumpNextFrame(int fase, int dir){
-    if(dir == 1){
-      if(fase >= 1 && fase <= 8){
+  void startJump(){
+    if(onGround){
+      dy = -1.5; //El primer impulso, el mejor es 3.14 para que no toque el techo
+      onGround = false;
+      y = YTAM - HEIGHT -2;
+    }
+  }
+
+  void endJump(){
+//    if(dy < -3.3){
+      dy -= -0.3;
+      
+//    }
+  }
+  
+  void jumpFrames(){
+    if(guy_dir == 1){
+      if(ascending == true){
         arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
-        y = y - 2;
-      }else if(fase >= 8 && fase <= 16){
+      }else if(falling == true){
         arduboy.drawBitmap(x, y, fallL, WIDTH, HEIGHT, 1);
-        y = y + 2;
       }
-    }else if(dir == 2){
-      if(fase >= 1 && fase <= 8){
+    }else if(guy_dir == 2){
+      if(ascending == true){
         arduboy.drawBitmap(x, y, jumpR, WIDTH, HEIGHT, 1);
-        y = y - 2;
-      }else if(fase >= 8 && fase <= 16){
+      }else if(falling == true){
         arduboy.drawBitmap(x, y, fallR, WIDTH, HEIGHT, 1);
-        y = y + 2;
       }
     }
   }
 
   void jump(){
-    if(jumpCount >= 1 && jumpCount <= 16){
-      jumpNextFrame(jumpCount, guy_dir);
-      jumpCount++;
-    }else{
-      jumpCount = 1;
-      jumping = false;
-      stand(guy_dir);
-    }
+    dy += GRAV;
+    y += dy;
+    
+    jumpFrames();
   }
   
   void loop() {
@@ -139,35 +152,67 @@
       
     arduboy.clear();
   
-    if(arduboy.pressed(LEFT_BUTTON) && !jumping){
+    if(arduboy.pressed(LEFT_BUTTON) && onGround && !arduboy.pressed(RIGHT_BUTTON)){
       guy_dir = 1;
       walk(guy_dir);
       gRunning = true;
-    }else if(arduboy.pressed(RIGHT_BUTTON) && !jumping){
+    }else if(arduboy.pressed(RIGHT_BUTTON) && onGround && !arduboy.pressed(LEFT_BUTTON)){
       guy_dir = 2;
       walk(guy_dir);
       gRunning = true;
     }else if(arduboy.pressed(UP_BUTTON) && !gRunning){
       jumping = true;
-    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON) && !arduboy.pressed(DOWN_BUTTON) && !jumping){
+    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON) && !arduboy.pressed(DOWN_BUTTON) && onGround || arduboy.pressed(RIGHT_BUTTON) && arduboy.pressed(LEFT_BUTTON) && onGround){
       stand(guy_dir);
       walkFase = 1;
       gRunning = false;
-      jumping = false;
+      y = 46;
+    }
+
+    if(dy > 3 && !onGround){
+      ascending = false;
+      falling = true;
+    }else if(dy < 0 && !onGround){
+      ascending = true;
+      falling = false;
     }
 
     if(jumping){
+      y -= 4;
+      if(arduboy.pressed(UP_BUTTON)){
+        startJump();
+      }
+      if(!arduboy.pressed(UP_BUTTON)){
+        endJump();
+      }
+      
       jump();
+      
+      if(y > 46){
+        onGround = true;
+        jumping = false;
+        falling = false;
+        ascending = false;
+        dy = 0.0;
+        y = 46;
+      }
     }
 
-    arduboy.setCursor(0, 0);
-    arduboy.print(guy_dir);
-    arduboy.setCursor(8, 0);
-    arduboy.print(jumping);
+//    arduboy.setCursor(0, 0);
+//    arduboy.print(dy);
+//    arduboy.setCursor(0, 8);
+//    arduboy.print(y);
+//    arduboy.setCursor(0, 16);
+//    arduboy.print(x);
+//    
+//    arduboy.setCursor(40, 0);
+//    arduboy.print(ascending);
+//    arduboy.setCursor(40, 8);
+//    arduboy.print(falling);
+//    arduboy.setCursor(40, 16);
+//    arduboy.print(onGround);
 
     notVisible();
-
-    delay(35); //Perfect delay 35
 
     arduboy.display();
   }
