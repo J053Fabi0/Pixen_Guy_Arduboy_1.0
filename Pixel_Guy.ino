@@ -26,7 +26,7 @@
   
   void setup() {
     arduboy.beginNoLogo();
-    arduboy.setFrameRate(35);
+    arduboy.setFrameRate(30);
   }
   
   void nextWalkFrame(int fase, int dir){
@@ -110,17 +110,33 @@
 
   void startJump(){
     if(onGround){
-      dy = -1.5; //El primer impulso, el mejor es 3.14 para que no toque el techo
+      dy = -1.7; //El primer impulso, el mejor es 3.14 para que no toque el techo
       onGround = false;
       y = YTAM - HEIGHT -2;
     }
   }
 
   void endJump(){
-//    if(dy < -3.3){
+    if(dy < 3){
       dy -= -0.3;
-      
-//    }
+      arduboy.setCursor(100, 30);
+      arduboy.print("quit");
+    }
+    arduboy.setCursor(100, 0);
+    arduboy.print("end");
+  }
+
+  void firstJumpFrame(){
+    if(!(dy != 0.0)){
+      if(y < YTAM - HEIGHT){
+        y = y > YTAM - HEIGHT;
+      }
+      if(guy_dir == 1){
+        arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
+      }else if(guy_dir == 2){
+        arduboy.drawBitmap(x, y, jumpR, WIDTH, HEIGHT, 1);
+      }
+    }
   }
   
   void jumpFrames(){
@@ -139,12 +155,15 @@
     }
   }
 
+  
+
   void jump(){
     dy += GRAV;
     y += dy;
     
     jumpFrames();
   }
+
   
   void loop() {
     if (!(arduboy.nextFrame()))
@@ -152,17 +171,44 @@
       
     arduboy.clear();
   
-    if(arduboy.pressed(LEFT_BUTTON) && onGround && !arduboy.pressed(RIGHT_BUTTON)){
-      guy_dir = 1;
-      walk(guy_dir);
-      gRunning = true;
-    }else if(arduboy.pressed(RIGHT_BUTTON) && onGround && !arduboy.pressed(LEFT_BUTTON)){
-      guy_dir = 2;
-      walk(guy_dir);
-      gRunning = true;
-    }else if(arduboy.pressed(UP_BUTTON) && !gRunning){
+    if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
+      if(arduboy.pressed(UP_BUTTON)){
+        firstJumpFrame();
+        jumping = true;
+        x -= 2;
+        guy_dir = 1;
+      }else{
+        if(jumping == true){
+          jumping = true;
+          x -= 2;
+          guy_dir = 1;
+        }else{
+          guy_dir = 1;
+          walk(guy_dir);
+          gRunning = true;
+        }
+      }
+    }else if(arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(LEFT_BUTTON)){
+      if(arduboy.pressed(UP_BUTTON)){
+        firstJumpFrame();
+        jumping = true;
+        x += 2;
+        guy_dir = 2;
+      }else{
+        if(jumping == true){
+          jumping = true;
+          x += 2;
+          guy_dir = 2;
+        }else{
+          guy_dir = 2;
+          walk(guy_dir);
+          gRunning = true;
+        }
+      }
+    }else if(arduboy.pressed(UP_BUTTON)){
+      firstJumpFrame();
       jumping = true;
-    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON) && !arduboy.pressed(DOWN_BUTTON) && onGround || arduboy.pressed(RIGHT_BUTTON) && arduboy.pressed(LEFT_BUTTON) && onGround){
+    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON)&& onGround || arduboy.pressed(RIGHT_BUTTON) && arduboy.pressed(LEFT_BUTTON) && onGround){
       stand(guy_dir);
       walkFase = 1;
       gRunning = false;
@@ -198,19 +244,19 @@
       }
     }
 
-//    arduboy.setCursor(0, 0);
-//    arduboy.print(dy);
-//    arduboy.setCursor(0, 8);
-//    arduboy.print(y);
-//    arduboy.setCursor(0, 16);
-//    arduboy.print(x);
-//    
-//    arduboy.setCursor(40, 0);
-//    arduboy.print(ascending);
-//    arduboy.setCursor(40, 8);
-//    arduboy.print(falling);
-//    arduboy.setCursor(40, 16);
-//    arduboy.print(onGround);
+    arduboy.setCursor(0, 0);
+    arduboy.print(dy);
+    arduboy.setCursor(0, 8);
+    arduboy.print(y);
+    arduboy.setCursor(0, 16);
+    arduboy.print(x);
+    
+    arduboy.setCursor(40, 0);
+    arduboy.print(ascending);
+    arduboy.setCursor(40, 8);
+    arduboy.print(falling);
+    arduboy.setCursor(40, 16);
+    arduboy.print(onGround);
 
     notVisible();
 
