@@ -15,7 +15,7 @@
   
   float x = 58;
   float vel = 0;
-  float y = 46;
+  float y = 45;
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
@@ -134,7 +134,7 @@
     if(onGround){
       dy = -1.7/2 +0.1; //El primer impulso, el mejor es 3.14 para que no toque el techo
       onGround = false;
-      y = YTAM - HEIGHT -2;
+      y = 45; //YTAM - HEIGHT -3
     }
   }
 
@@ -146,9 +146,9 @@
   }
 
   void firstJumpFrame(){//jump
-    if(!(dy != 0.0)){
-      if(y < YTAM - HEIGHT){
-        y = y > YTAM - HEIGHT;
+    if(dy == 0.0){
+      if(y < 45){
+        y = 45;
       }
       if(guy_dir == 1){
         arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
@@ -222,7 +222,7 @@
       
       jump();
       
-      if(y > 46){
+      if(y > 45){
         onGround = true;
         doubleJump = true;
         didEndJump = false;
@@ -230,7 +230,7 @@
         falling = false;
         ascending = false;
         dy = 0.0;
-        y = 46;
+        y = 45; //YTAM - HEIGHT -3
       }
     }
 
@@ -297,11 +297,13 @@
     arduboy.clear();
     sentences();
     loopSentences();
+
+    arduboy.drawFastHLine(0, 63, 128, WHITE);
     
-    arduboy.setCursor(0, 0);
-    arduboy.print(vel);
-    arduboy.setCursor(0, 8);
-    arduboy.print(gRunning);
+//    arduboy.setCursor(0, 0);
+//    arduboy.print(vel);
+//    arduboy.setCursor(0, 8);
+//    arduboy.print(gRunning);
 //    arduboy.setCursor(0, 16);
 //    arduboy.print();
     
