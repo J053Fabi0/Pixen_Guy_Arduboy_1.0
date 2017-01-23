@@ -2,6 +2,8 @@
 #define PIXELGUY_BITMAPS_H
 #include <avr/pgmspace.h>
 
+extern const unsigned char pixenGuyLogo[];
+
 extern const unsigned char standingR[];
 
 extern const unsigned char standingL[];

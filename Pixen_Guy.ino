@@ -20,6 +20,9 @@
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
+  int xLogo = 0;
+
+  bool login = true;
   
   bool doubleJump = true;
   bool didEndJump = false; //Was endJump called already?
@@ -33,6 +36,15 @@
   void setup() {
     arduboy.beginNoLogo();
     arduboy.setFrameRate(30);
+  }
+
+  void moveLogo(){
+    if(xLogo < 32-(HEIGHT/2)){
+      xLogo += 1;
+    }else{
+      login = false;
+    }
+    arduboy.drawBitmap(0, xLogo, pixenGuyLogo, 126, 18, 1);
   }
   
   void nextWalkFrame(int fase, int dir){//walk
@@ -295,10 +307,18 @@
       return;
 
     arduboy.clear();
-    sentences();
-    loopSentences();
 
-    arduboy.drawFastHLine(0, 63, 128, WHITE);
+    if(login){
+      moveLogo();
+    }
+    else{
+      
+      sentences();
+      loopSentences();
+
+      arduboy.drawFastHLine(0, 63, 128, WHITE);
+    
+    }
     
 //    arduboy.setCursor(0, 0);
 //    arduboy.print(vel);
