@@ -13,14 +13,14 @@
   #define YTAM 64
   #define GRAV 0.4
   
-  float x = 58;
+  float x = 0; //Pixen Guy x is 58, but we use this variable to move the boot logo
   float vel = 0;
   float y = 45;
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
-  int xLogo = 0;
+  int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
 
   bool login = true;
   
@@ -39,12 +39,23 @@
   }
 
   void moveLogo(){
-    if(xLogo < 32-(HEIGHT/2)){
-      xLogo += 1;
-    }else{
-      login = false;
+    if(x < 32-(HEIGHT/2)){
+      x += 1;
+      arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+      arduboy.setCursor(39, 56);
+      arduboy.print("Jose Fabio Loya");
     }
-    arduboy.drawBitmap(0, xLogo, pixenGuyLogo, 126, 18, 1);
+    else{
+      if(counter < 50){
+        arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+        arduboy.setCursor(39, 56);
+        arduboy.print("Jose Fabio Loya");
+        counter++;
+      }else{
+        login = false;
+        x = 58; //The position of the Pixel Guy
+      }
+    }
   }
   
   void nextWalkFrame(int fase, int dir){//walk
