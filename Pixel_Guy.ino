@@ -1,37 +1,41 @@
   #include <Arduboy.h>
   #include "animations_bitmaps.h"
-  using namespace std;
   
   Arduboy arduboy;
   
   #define WIDTH 12
   #define HEIGHT 18
-
-  const int XTAM = 128; //El tamaño de la pantalla
-  const int YTAM = 64;
-  const float GRAV = 0.4;
+  
+  #define ACELERACION 0.2
+  #define VELOCIDAD_MAX 3
+  
+  #define XTAM 128 //El tamaño de la pantalla
+  #define YTAM 64
+  #define GRAV 0.4
   
   float x = 58;
+  float vel = 0;
   float y = 46;
-  float dy = 0; //Velocidad (lo que se le suma a y por frame)
+  float dy = 0;   //Velocidad (lo que se le suma a y por frame)
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
   
   bool doubleJump = true;
-  bool didEndJump = false; //was endJump called already
+  bool didEndJump = false; //Was endJump called already?
   bool ascending = false;
   bool falling = false;
   bool onGround = true;
   bool gRunning = false;
   bool jumping = false;
+  bool des = false;       //Is guy decelerating?
   
   void setup() {
     arduboy.beginNoLogo();
     arduboy.setFrameRate(30);
   }
   
-  void nextWalkFrame(int fase, int dir){
+  void nextWalkFrame(int fase, int dir){//walk
     if(dir == 1){
       if(fase == 1){
         arduboy.drawBitmap(x, y, costumeL1, WIDTH, HEIGHT, 1);
@@ -80,24 +84,29 @@
       }
     }
   }
-
-  void moveX(){
-    
-  }
   
-  void walk(int guy_direction){
-    if(guy_direction == 1){
-      //walk left
-      nextWalkFrame(walkFase, guy_direction);
-      x = x - 2;
-    }else if(guy_direction == 2){
-      //walk right
-      nextWalkFrame(walkFase, guy_direction);
-      x = x + 2;
+  void walk(){//walk
+    if(guy_dir == 2){
+      vel += ACELERACION;
+      if (vel > VELOCIDAD_MAX) {
+        vel = VELOCIDAD_MAX;
+      }
+    }else if(guy_dir == 1){
+      vel -= ACELERACION;
+      if (vel < -VELOCIDAD_MAX) {
+        vel = -VELOCIDAD_MAX;
+      }
     }
+    x += vel;
+    
+    if(!jumping){
+      nextWalkFrame(walkFase, guy_dir);
+    }
+    
+    gRunning = true;
   }
   
-  void stand(int guy_dir){
+  void stand(){//pixel
     if(guy_dir == 1){
       arduboy.drawBitmap(x, y, standingL, WIDTH, HEIGHT, 1);
     }else if(guy_dir == 2){
@@ -105,23 +114,23 @@
     }
   }
 
-  void notVisible(){
-    if(x <= -16 && x >= -20 ){
+  void notVisible(){//pixel
+    if(x <= -18 && x >= -22 ){
       x = 136;
     }
-    if(x >= 138 && x <= 140){
+    if(x >= 140 && x <= 144){
       x = -14;
     }
   }
 
-  void doDoubleJump(){
+  void doDoubleJump(){//jump
     if(doubleJump && !onGround){
     dy = -1.7/2 +0.2;
     doubleJump = false;
     }
   }
 
-  void startJump(){
+  void startJump(){//jump
     if(onGround){
       dy = -1.7/2 +0.1; //El primer impulso, el mejor es 3.14 para que no toque el techo
       onGround = false;
@@ -129,14 +138,14 @@
     }
   }
 
-  void endJump(){
+  void endJump(){//jump
     didEndJump = true;
     if(dy < 3){
       dy -= -0.3;
     }
   }
 
-  void firstJumpFrame(){
+  void firstJumpFrame(){//jump
     if(!(dy != 0.0)){
       if(y < YTAM - HEIGHT){
         y = y > YTAM - HEIGHT;
@@ -149,7 +158,7 @@
     }
   }
   
-  void jumpFrames(){
+  void jumpFrames(){//jump
     if(guy_dir == 1){
       if(ascending == true){
         arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
@@ -165,7 +174,7 @@
     }
   }
 
-  void jump(){
+  void jump(){//jump
     dy += GRAV;
     y += dy;
     if(y <= 0){
@@ -175,66 +184,29 @@
     jumpFrames();
   }
 
-  
-  void loop() {
-    if (!(arduboy.nextFrame()))
-      return;
-      
-    arduboy.clear();
-  
-    if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
-      if(arduboy.pressed(UP_BUTTON)){
-        firstJumpFrame();
-        jumping = true;
-        x -= 2;
-        guy_dir = 1;
-      }else{
-        if(jumping == true){
-          jumping = true;
-          x -= 2;
-          guy_dir = 1;
-        }else{
-          guy_dir = 1;
-          walk(guy_dir);
-          gRunning = true;
-        }
-      }
-    }else if(arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(LEFT_BUTTON)){
-      if(arduboy.pressed(UP_BUTTON)){
-        firstJumpFrame();
-        jumping = true;
-        x += 2;
-        guy_dir = 2;
-      }else{
-        if(jumping == true){
-          jumping = true;
-          x += 2;
-          guy_dir = 2;
-        }else{
-          guy_dir = 2;
-          walk(guy_dir);
-          gRunning = true;
-        }
-      }
-    }else if(arduboy.pressed(UP_BUTTON)){
+  void sentences(){
+    notVisible();
+    
+    if(arduboy.pressed(UP_BUTTON)){
       firstJumpFrame();
       jumping = true;
-      
-    }else if(!arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(UP_BUTTON)&& onGround || arduboy.pressed(RIGHT_BUTTON) && arduboy.pressed(LEFT_BUTTON) && onGround){
-      stand(guy_dir);
-      walkFase = 1;
-      gRunning = false;
-      y = 46;
     }
-
-    if(dy > 3 && !onGround){
-      ascending = false;
-      falling = true;
-    }else if(dy < 0 && !onGround){
-      ascending = true;
-      falling = false;
+    
+    else if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
+      guy_dir = 1;
+      gRunning = true;
     }
+    
+    else if(arduboy.pressed(RIGHT_BUTTON) && !arduboy.pressed(LEFT_BUTTON)){
+      guy_dir = 2;
+      gRunning = true;
+    }
+    else if(!gRunning && !jumping){
+      stand();
+    }
+  }
 
+  void loopSentences(){
     if(jumping){
       y -= 4;
       if(arduboy.pressed(UP_BUTTON)){
@@ -262,21 +234,83 @@
       }
     }
 
-//    arduboy.setCursor(0, 0);
-//    arduboy.print(dy);
-//    arduboy.setCursor(0, 8);
-//    arduboy.print(y);
+    if(dy > 3 && !onGround){
+      ascending = false;
+      falling = true;
+    }
+    else if(dy < 0 && !onGround){
+      ascending = true;
+      falling = false;
+    }
+
+    if(gRunning){
+      
+      if(arduboy.pressed(RIGHT_BUTTON) || arduboy.pressed(LEFT_BUTTON)){
+        walk();
+      }
+      
+      else if(vel > 0){
+        vel -= ACELERACION;
+        x += vel;
+
+        if(!jumping){
+          if(guy_dir == 1){
+            arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
+          }
+          else{
+            arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
+          }
+        }
+        
+        if(vel <= 0){
+          vel = 0;
+          gRunning = false;
+        }
+      }
+      else{
+        vel += ACELERACION;
+        x += vel;
+        
+        if(!jumping){
+          if(guy_dir == 1){
+            arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
+          }
+          else{
+            arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
+          }
+        }
+        
+        if(vel >= 0){
+          vel = 0;
+          gRunning = false;
+        }
+      }
+    }
+
+  }
+
+  
+  void loop() {
+    if (!(arduboy.nextFrame()))
+      return;
+
+    arduboy.clear();
+    sentences();
+    loopSentences();
+    
+    arduboy.setCursor(0, 0);
+    arduboy.print(vel);
+    arduboy.setCursor(0, 8);
+    arduboy.print(gRunning);
 //    arduboy.setCursor(0, 16);
-//    arduboy.print(x);
-//    
+//    arduboy.print();
+    
 //    arduboy.setCursor(40, 0);
-//    arduboy.print(ascending);
+//    arduboy.print(vel);
 //    arduboy.setCursor(40, 8);
-//    arduboy.print(falling);
+//    arduboy.print(des);
 //    arduboy.setCursor(40, 16);
 //    arduboy.print(onGround);
-
-    notVisible();
 
     arduboy.display();
   }
