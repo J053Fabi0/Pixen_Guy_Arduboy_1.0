@@ -22,7 +22,7 @@
   int walkFase = 1;
   int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
 
-  bool login = true;
+  bool login = true; //Boot is true at the beginning
   
   bool doubleJump = true;
   bool didEndJump = false; //Was endJump called already?
@@ -292,35 +292,38 @@
         x += vel;
 
         if(!jumping){
-          if(guy_dir == 1){
+
+          if(vel <= 0){
+            vel = 0;
+            gRunning = false;
+            stand();
+          }
+          
+          if(vel < 0){
             arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
           }
-          else{
+          else if(vel > 0){
             arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
           }
-        }
-        
-        if(vel <= 0){
-          vel = 0;
-          gRunning = false;
         }
       }
       else{
         vel += ACELERACION;
         x += vel;
-        
         if(!jumping){
-          if(guy_dir == 1){
+          
+          if(vel >= 0){
+            vel = 0;
+            gRunning = false;
+            stand();
+          }
+          
+          if(vel < 0){
             arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
           }
-          else{
+          else if(vel > 0){
             arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
           }
-        }
-        
-        if(vel >= 0){
-          vel = 0;
-          gRunning = false;
         }
       }
     }
