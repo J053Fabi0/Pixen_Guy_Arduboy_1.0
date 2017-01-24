@@ -1,8 +1,11 @@
-Pixel Guy Arduboy 1.0
+Pixen Guy Arduboy 1.0
 ==============================
-> This game it has only been tested for Arduboy 1.0
+> This game has only been tested for Arduboy 1.0
 
-**To open the file you will have to..**
+**To open the file you´ll have to..**
 * Download or clone the proyect on your computer
-* Then rename the carpet to `Pixel_Guy`
-* Finally open the game and enjoy it
+* Then rename the carpet to `Pixen_Guy`
+* Finally upload the game to your Arduboy and play!
+
+
+[![Pixen Guy](https://s29.postimg.org/jnvjnskxj/Pixen_Guy_Logo_png_min_504x72.png)](https://postimg.org/image/i8tyz2jub/)
