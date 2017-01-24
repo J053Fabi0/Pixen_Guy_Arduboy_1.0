@@ -42,18 +42,23 @@
     if(x < 32-(HEIGHT/2)){
       x += 1;
       arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+      arduboy.setCursor(35, 46);
+      arduboy.print("Developed by");
       arduboy.setCursor(39, 56);
       arduboy.print("Jose Fabio Loya");
     }
     else{
       if(counter < 50){
         arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+        arduboy.setCursor(35, 46);
+        arduboy.print("Developed by");
         arduboy.setCursor(39, 56);
         arduboy.print("Jose Fabio Loya");
         counter++;
       }else{
         login = false;
         x = 58; //The position of the Pixel Guy
+        counter = 0;
       }
     }
   }
@@ -228,6 +233,7 @@
     if(!gRunning && !jumping){
       stand();
     }
+    
   }
 
   void loopSentences(){
@@ -329,6 +335,28 @@
       loopSentences();
 
       arduboy.drawFastHLine(0, 63, 128, WHITE);
+
+      if(arduboy.pressed(A_BUTTON)){ //Reset the game
+        x = 0;
+        vel = 0;
+        y = 45;
+        dy = 0;
+       
+        guy_dir = 2;
+        walkFase = 1;
+        counter = 0;
+     
+        login = true;
+       
+        doubleJump = true;
+        didEndJump = false;
+        ascending = false;
+        falling = false;
+        onGround = true;
+        gRunning = false;
+        jumping = false;
+        des = false; 
+      }
     
     }
     
