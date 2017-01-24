@@ -336,26 +336,48 @@
 
       arduboy.drawFastHLine(0, 63, 128, WHITE);
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////RESET////////////////////////////////////////////////////////////  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+
       if(arduboy.pressed(A_BUTTON)){ //Reset the game
-        x = 0;
-        vel = 0;
-        y = 45;
-        dy = 0;
+        if(counter > 60){
+          x = 0;
+          vel = 0;
+          y = 45;
+          dy = 0;
+         
+          guy_dir = 2;
+          walkFase = 1;
+          counter = 0;
        
-        guy_dir = 2;
-        walkFase = 1;
+          login = true;
+         
+          doubleJump = true;
+          didEndJump = false;
+          ascending = false;
+          falling = false;
+          onGround = true;
+          gRunning = false;
+          jumping = false;
+          des = false; 
+        }else{
+          counter++;
+          if(counter >= 10 && counter <= 29){
+            arduboy.setCursor(60, 0);
+            arduboy.print("1");
+          }
+          else if(counter >= 30 && counter <= 49){
+            arduboy.setCursor(60, 0);
+            arduboy.print("2");
+          }
+          else if(counter >= 50){
+            arduboy.setCursor(60, 0);
+            arduboy.print("3");
+          }
+        }
+      }else{
         counter = 0;
-     
-        login = true;
-       
-        doubleJump = true;
-        didEndJump = false;
-        ascending = false;
-        falling = false;
-        onGround = true;
-        gRunning = false;
-        jumping = false;
-        des = false; 
       }
     
     }
