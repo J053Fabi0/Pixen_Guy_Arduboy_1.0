@@ -215,7 +215,7 @@
       jumping = true;
     }
     
-    else if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
+    if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
       guy_dir = 1;
       gRunning = true;
     }
@@ -224,7 +224,8 @@
       guy_dir = 2;
       gRunning = true;
     }
-    else if(!gRunning && !jumping){
+    
+    if(!gRunning && !jumping){
       stand();
     }
   }
