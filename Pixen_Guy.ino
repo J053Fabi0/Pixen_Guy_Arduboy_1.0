@@ -127,8 +127,16 @@
     }
     x += vel;
     
-    if(!jumping){
-      nextWalkFrame(walkFase, guy_dir);
+    if(!jumping){    //Here is how it skid automatically  *skid es derrapar en inglés*
+      if(vel < 0 && guy_dir == 2){
+        arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
+      }
+      else if(vel > 0 && guy_dir == 1){
+        arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
+      }
+      else{
+        nextWalkFrame(walkFase, guy_dir);
+      }
     }
     
     gRunning = true;
@@ -341,7 +349,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 
       if(arduboy.pressed(A_BUTTON)){ //Reset the game
-        if(counter > 60){
+        if(counter > 60){ //"For" loop where counter is "i"
           x = 0;
           vel = 0;
           y = 45;
@@ -351,7 +359,7 @@
           walkFase = 1;
           counter = 0;
        
-          login = true;
+          login = true; //Esta es la variable que indica si se hace el boot
          
           doubleJump = true;
           didEndJump = false;
@@ -363,6 +371,8 @@
           des = false; 
         }else{
           counter++;
+
+          //Timer (1, 2, 3... Reset)
           if(counter >= 10 && counter <= 29){
             arduboy.setCursor(60, 0);
             arduboy.print("1");
@@ -376,7 +386,7 @@
             arduboy.print("3");
           }
         }
-      }else{
+      }else{ //If you decide to not reset the game it reset the counter
         counter = 0;
       }
     
