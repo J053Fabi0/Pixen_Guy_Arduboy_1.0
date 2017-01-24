@@ -13,13 +13,16 @@
   #define YTAM 64
   #define GRAV 0.4
   
-  float x = 58;
+  float x = 0; //Pixen Guy x is 58, but we use this variable to move the boot logo
   float vel = 0;
   float y = 45;
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
+  int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
+
+  bool login = true;
   
   bool doubleJump = true;
   bool didEndJump = false; //Was endJump called already?
@@ -33,6 +36,31 @@
   void setup() {
     arduboy.beginNoLogo();
     arduboy.setFrameRate(30);
+  }
+
+  void moveLogo(){
+    if(x < 32-(HEIGHT/2)){
+      x += 1;
+      arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+      arduboy.setCursor(35, 46);
+      arduboy.print("Developed by");
+      arduboy.setCursor(39, 56);
+      arduboy.print("Jose Fabio Loya");
+    }
+    else{
+      if(counter < 50){
+        arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+        arduboy.setCursor(35, 46);
+        arduboy.print("Developed by");
+        arduboy.setCursor(39, 56);
+        arduboy.print("Jose Fabio Loya");
+        counter++;
+      }else{
+        login = false;
+        x = 58; //The position of the Pixel Guy
+        counter = 0;
+      }
+    }
   }
   
   void nextWalkFrame(int fase, int dir){//walk
@@ -192,7 +220,7 @@
       jumping = true;
     }
     
-    else if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
+    if(arduboy.pressed(LEFT_BUTTON) && !arduboy.pressed(RIGHT_BUTTON)){
       guy_dir = 1;
       gRunning = true;
     }
@@ -201,9 +229,11 @@
       guy_dir = 2;
       gRunning = true;
     }
-    else if(!gRunning && !jumping){
+    
+    if(!gRunning && !jumping){
       stand();
     }
+    
   }
 
   void loopSentences(){
@@ -295,10 +325,62 @@
       return;
 
     arduboy.clear();
-    sentences();
-    loopSentences();
 
-    arduboy.drawFastHLine(0, 63, 128, WHITE);
+    if(login){
+      moveLogo();
+    }
+    else{
+      
+      sentences();
+      loopSentences();
+
+      arduboy.drawFastHLine(0, 63, 128, WHITE);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////RESET////////////////////////////////////////////////////////////  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+
+      if(arduboy.pressed(A_BUTTON)){ //Reset the game
+        if(counter > 60){
+          x = 0;
+          vel = 0;
+          y = 45;
+          dy = 0;
+         
+          guy_dir = 2;
+          walkFase = 1;
+          counter = 0;
+       
+          login = true;
+         
+          doubleJump = true;
+          didEndJump = false;
+          ascending = false;
+          falling = false;
+          onGround = true;
+          gRunning = false;
+          jumping = false;
+          des = false; 
+        }else{
+          counter++;
+          if(counter >= 10 && counter <= 29){
+            arduboy.setCursor(60, 0);
+            arduboy.print("1");
+          }
+          else if(counter >= 30 && counter <= 49){
+            arduboy.setCursor(60, 0);
+            arduboy.print("2");
+          }
+          else if(counter >= 50){
+            arduboy.setCursor(60, 0);
+            arduboy.print("3");
+          }
+        }
+      }else{
+        counter = 0;
+      }
+    
+    }
     
 //    arduboy.setCursor(0, 0);
 //    arduboy.print(vel);
