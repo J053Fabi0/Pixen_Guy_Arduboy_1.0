@@ -12,36 +12,44 @@
   #define XTAM 128 //El tamaño de la pantalla
   #define YTAM 64
   #define GRAV 0.4
+
+  #define CLOUD_VELOCIDAD_MAX 2
   
-  float x = 0; //Pixen Guy x is 58, but we use this variable to move the boot logo
+  float x = 58; //Pixen Guy x is 58, but we use this variable to move the boot logo
   float vel = 0;
-  float y = 45;
+  float y = 45; //Pixen Guy default y is "ground"
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
+  
+  float cloud_y = random(0, 10);
+  float cloud_x = 58;
+  float cloud_dx = 0.1;
+  float cloud_acx = -0.2;
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
   int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
+  int ground = 45; //45 is the ground of the pixel guy
 
-  bool login = true; //Boot is true at the beginning
+  bool login = 1; //Boot is true at the beginning
+  float xBootLogo = 0;
   
   bool doubleJump = true;
   bool didEndJump = false; //Was endJump called already?
   bool ascending = false;
   bool falling = false;
-  bool onGround = true;
   bool gRunning = false;
   bool jumping = false;
   bool des = false;       //Is guy decelerating?
   
   void setup() {
     arduboy.beginNoLogo();
-    arduboy.setFrameRate(30);
+    arduboy.setFrameRate(30); //Default is 30
   }
 
   void moveLogo(){
-    if(x < 32-(HEIGHT/2)){
-      x += 1;
-      arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+    if(xBootLogo < 32-(HEIGHT/2)){
+      xBootLogo += 0.8;
+      arduboy.drawBitmap(0, xBootLogo, pixenGuyLogo, 126, 18, 1);
       arduboy.setCursor(35, 46);
       arduboy.print("Developed by");
       arduboy.setCursor(39, 56);
@@ -49,7 +57,7 @@
     }
     else{
       if(counter < 50){
-        arduboy.drawBitmap(0, x, pixenGuyLogo, 126, 18, 1);
+        arduboy.drawBitmap(0, 23, pixenGuyLogo, 126, 18, 1);
         arduboy.setCursor(35, 46);
         arduboy.print("Developed by");
         arduboy.setCursor(39, 56);
@@ -57,7 +65,6 @@
         counter++;
       }else{
         login = false;
-        x = 58; //The position of the Pixel Guy
         counter = 0;
       }
     }
@@ -141,6 +148,7 @@
     
     gRunning = true;
   }
+
   
   void stand(){//pixel
     if(guy_dir == 1){
@@ -160,17 +168,25 @@
   }
 
   void doDoubleJump(){//jump
-    if(doubleJump && !onGround){
+    if(doubleJump && !onGround()){
     dy = -1.7/2 +0.2;
     doubleJump = false;
     }
   }
 
+  boolean onGround(){
+    if(y < ground){
+      return false;
+    }
+    else{
+      return true;
+    }
+  }
+
   void startJump(){//jump
-    if(onGround){
-      dy = -1.7/2 +0.1; //El primer impulso, el mejor es 3.14 para que no toque el techo
-      onGround = false;
-      y = 45; //YTAM - HEIGHT -3
+    if(onGround()){
+      dy = -1.7/2 +0.1; //El primer impulso
+      y = ground; //YTAM - HEIGHT -3
     }
   }
 
@@ -183,8 +199,8 @@
 
   void firstJumpFrame(){//jump
     if(dy == 0.0){
-      if(y < 45){
-        y = 45;
+      if(!onGround){
+        y = ground;
       }
       if(guy_dir == 1){
         arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
@@ -220,8 +236,40 @@
     jumpFrames();
   }
 
+  void fall(){
+    firstJumpFrame();
+    jumping = true;
+  }
+
+  void cloud(){
+
+    cloud_dx += cloud_acx;
+    if (cloud_dx > CLOUD_VELOCIDAD_MAX && cloud_acx > 0) {
+      cloud_acx = cloud_acx * (-1);
+      cloud_dx = CLOUD_VELOCIDAD_MAX;
+    }
+    else if(cloud_dx < (CLOUD_VELOCIDAD_MAX * -1) && cloud_acx < 0){
+      cloud_acx = cloud_acx * (-1);
+      cloud_dx = CLOUD_VELOCIDAD_MAX * -1;
+    }
+        
+    if(!(cloud_x+1 == x) || !(cloud_x-1 == x)){
+      if(x >= cloud_x){
+        cloud_x = cloud_x + 0.5;
+      }
+      else if(x <= cloud_x){
+        cloud_x = cloud_x - 0.5;
+      }
+    }
+
+    cloud_x = cloud_dx + cloud_x;
+    
+    arduboy.drawBitmap(cloud_x, cloud_y, cloud_1, 17, 7, WHITE);
+  }
+
   void sentences(){
     notVisible();
+    cloud();
     
     if(arduboy.pressed(UP_BUTTON)){
       firstJumpFrame();
@@ -245,12 +293,17 @@
   }
 
   void loopSentences(){
+    if(!onGround()){
+      fall();
+    }
+    
     if(jumping){
       y -= 4;
       if(arduboy.pressed(UP_BUTTON)){
         if(!didEndJump){
           startJump();
-        }else if(didEndJump && doubleJump){
+        }
+        else if(didEndJump && doubleJump){
           doDoubleJump();
         }
       }
@@ -260,25 +313,25 @@
       
       jump();
       
-      if(y > 45){
-        onGround = true;
+      if(y > ground){
         doubleJump = true;
         didEndJump = false;
         jumping = false;
         falling = false;
         ascending = false;
         dy = 0.0;
-        y = 45; //YTAM - HEIGHT -3
+        y = ground; //YTAM - HEIGHT -3
       }
     }
-
-    if(dy > 3 && !onGround){
-      ascending = false;
-      falling = true;
-    }
-    else if(dy < 0 && !onGround){
-      ascending = true;
-      falling = false;
+    if(!onGround()){
+      if(dy > 3){
+        ascending = false;
+        falling = true;
+      }
+      else{ //it was an if like this:  if(dy < 0 && !onGround()
+        ascending = true;
+        falling = false;
+      }
     }
 
     if(gRunning){
@@ -353,25 +406,26 @@
 
       if(arduboy.pressed(A_BUTTON)){ //Reset the game
         if(counter > 60){ //"For" loop where counter is "i"
-          x = 0;
+          x = 58;
           vel = 0;
           y = 45;
           dy = 0;
-         
+          
           guy_dir = 2;
           walkFase = 1;
           counter = 0;
-       
-          login = true; //Esta es la variable que indica si se hace el boot
-         
+          ground = 45;
+        
+          login = 1;
+          xBootLogo = 0;
+          
           doubleJump = true;
           didEndJump = false;
           ascending = false;
           falling = false;
-          onGround = true;
           gRunning = false;
           jumping = false;
-          des = false; 
+          des = false;  
         }else{
           counter++;
 
@@ -389,7 +443,8 @@
             arduboy.print("3");
           }
         }
-      }else{ //If you decide to not reset the game it reset the counter
+      }
+      else { //If you decide to not reset the game it reset the counter
         counter = 0;
       }
     
@@ -398,14 +453,14 @@
 //    arduboy.setCursor(0, 0);
 //    arduboy.print(vel);
 //    arduboy.setCursor(0, 8);
-//    arduboy.print(gRunning);
+//    arduboy.print(x);
 //    arduboy.setCursor(0, 16);
-//    arduboy.print();
+//    arduboy.print(y);
     
 //    arduboy.setCursor(40, 0);
-//    arduboy.print(vel);
+//    arduboy.print(ascending);
 //    arduboy.setCursor(40, 8);
-//    arduboy.print(des);
+//    arduboy.print(falling);
 //    arduboy.setCursor(40, 16);
 //    arduboy.print(onGround);
 

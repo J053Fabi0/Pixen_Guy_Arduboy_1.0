@@ -41,6 +41,9 @@ extern const unsigned char costumeR7[];
 
 extern const unsigned char stopL[];
 extern const unsigned char stopR[];
+
+extern const unsigned char cloud_1[];
+
 #endif
 
   
