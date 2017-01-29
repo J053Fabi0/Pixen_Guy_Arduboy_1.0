@@ -27,8 +27,10 @@
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int walkFase = 1;
-  int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
   int ground = 45; //45 is the ground of the pixel guy
+  
+  int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
+  int arrowCounter = 0;
 
   bool login = 1; //Boot is true at the beginning
   float xBootLogo = 0;
@@ -165,6 +167,29 @@
     if(x >= 140 && x <= 144){
       x = -14;
     }
+
+    if(x <= -10 || x >= 128){
+      if(arrowCounter <= 20){
+        arrowCounter++;
+      }
+      else{
+        if(x <= -10){
+          //<-- Arrow
+          arduboy.drawFastHLine(2, y+9, 8, WHITE);
+          arduboy.drawLine(2, y+9, 4, (y+9)-2, WHITE);
+          arduboy.drawLine(2, y+9, 4, (y+9)+2, WHITE);
+        }
+        if(x >= 128){
+          arduboy.drawFastHLine(120, y+9, 126, WHITE);
+          arduboy.drawLine(127, y+9, 125, (y+9)-2, WHITE);
+          arduboy.drawLine(127, y+9, 125, (y+9)+2, WHITE);
+        }
+      }
+    }
+    else{
+      arrowCounter = 0;
+    }
+    
   }
 
   void doDoubleJump(){//jump
@@ -244,7 +269,7 @@
   void cloud(){
 
     cloud_dx += cloud_acx;
-    if (cloud_dx > CLOUD_VELOCIDAD_MAX && cloud_acx > 0) {
+    if (cloud_dx > CLOUD_VELOCIDAD_MAX && cloud_acx > 0) {            //Move forwards and backwards
       cloud_acx = cloud_acx * (-1);
       cloud_dx = CLOUD_VELOCIDAD_MAX;
     }
@@ -253,7 +278,7 @@
       cloud_dx = CLOUD_VELOCIDAD_MAX * -1;
     }
         
-    if(!(cloud_x+1 == x) || !(cloud_x-1 == x)){
+    if(!(cloud_x+1 == x) || !(cloud_x-1 == x)){                       //Follow your x pos
       if(x >= cloud_x){
         cloud_x = cloud_x + 0.5;
       }
@@ -261,9 +286,17 @@
         cloud_x = cloud_x - 0.5;
       }
     }
-//        (y <= cloud_y+7 && y >= cloud_y) &&                                            
-    if(( (cloud_y <= y+18 && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+12 && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
-      arduboy.tunes.tone(880, 80);
+
+    if(cloud_x <= 2){
+      cloud_x = 2;
+    }
+    else if(cloud_x >= 128-19){
+      cloud_x = 128-19;
+    }
+
+    //This detect if pixen guy is touching  the cloud
+    if(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
+      
     }
 
     cloud_x = cloud_dx + cloud_x;
@@ -275,7 +308,7 @@
     notVisible();
     cloud();
     
-    if(arduboy.pressed(UP_BUTTON)){
+    if(arduboy.pressed(UP_BUTTON) || arduboy.pressed(A_BUTTON)){
       firstJumpFrame();
       jumping = true;
     }
@@ -303,7 +336,7 @@
     
     if(jumping){
       y -= 4;
-      if(arduboy.pressed(UP_BUTTON)){
+      if(arduboy.pressed(UP_BUTTON) || arduboy.pressed(A_BUTTON)){
         if(!didEndJump){
           startJump();
         }
@@ -311,7 +344,7 @@
           doDoubleJump();
         }
       }
-      if(!arduboy.pressed(UP_BUTTON)){
+      if(!arduboy.pressed(UP_BUTTON) && !arduboy.pressed(A_BUTTON)){
         endJump();
       }
       
@@ -408,7 +441,7 @@
 ///////////////////////////////////////////////////////RESET////////////////////////////////////////////////////////////  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 
-      if(arduboy.pressed(A_BUTTON)){ //Reset the game
+      if(arduboy.pressed(B_BUTTON)){ //Reset the game
         if(counter > 60){ //"For" loop where counter is "i"
           x = 58;
           vel = 0;
