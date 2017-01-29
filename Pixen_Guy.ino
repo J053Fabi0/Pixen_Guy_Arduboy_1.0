@@ -20,7 +20,7 @@
   float y = 45; //Pixen Guy default y is "ground"
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
   
-  float cloud_y = random(0, 10);
+  float cloud_y = 30; //random(0, 10)
   float cloud_x = 58;
   float cloud_dx = 0.1;
   float cloud_acx = -0.2;
@@ -260,6 +260,10 @@
       else if(x <= cloud_x){
         cloud_x = cloud_x - 0.5;
       }
+    }
+//        (y <= cloud_y+7 && y >= cloud_y) &&                                            
+    if(( (cloud_y <= y+18 && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+12 && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
+      arduboy.tunes.tone(880, 80);
     }
 
     cloud_x = cloud_dx + cloud_x;
