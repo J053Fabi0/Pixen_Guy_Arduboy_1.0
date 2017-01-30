@@ -188,11 +188,13 @@
           arduboy.drawFastHLine(2, y+9, 8, WHITE);
           arduboy.drawLine(2, y+9, 4, (y+9)-2, WHITE);
           arduboy.drawLine(2, y+9, 4, (y+9)+2, WHITE);
+          arduboy.drawBitmap(12, y+6, miniCostume, 5, 7, 1);
         }
         if(x >= 128){
           arduboy.drawFastHLine(120, y+9, 126, WHITE);
           arduboy.drawLine(127, y+9, 125, (y+9)-2, WHITE);
           arduboy.drawLine(127, y+9, 125, (y+9)+2, WHITE);
+          arduboy.drawBitmap(113, y+6, miniCostume, 5, 7, 1);
         }
       }
     }
@@ -365,6 +367,7 @@
       if(x <= 3){
         x = 3;
       }
+      arduboy.drawBitmap(64-32, 5, miniPGLogo, 63, 9, 1);
     }
     else if(room == 2){
       fire();

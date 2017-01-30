@@ -3,6 +3,7 @@
 #include <avr/pgmspace.h>
 
 extern const unsigned char pixenGuyLogo[];
+extern const unsigned char miniPGLogo[];
 
 extern const unsigned char standingR[];
 
@@ -38,6 +39,8 @@ extern const unsigned char costumeR4[];
 extern const unsigned char costumeR5[];
 extern const unsigned char costumeR6[];
 extern const unsigned char costumeR7[];
+
+extern const unsigned char miniCostume[];
 
 extern const unsigned char stopL[];
 extern const unsigned char stopR[];
