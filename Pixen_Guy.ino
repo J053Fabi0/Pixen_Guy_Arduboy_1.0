@@ -30,6 +30,7 @@
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int ground = 45; //45 is the ground of the pixel guy
+  int room = 1;
   
   int walkFase = 1;
   int fireFase = 1;
@@ -165,13 +166,18 @@
   }
 
   void notVisible(){//pixel
+    //Left
     if(x <= -18 && x >= -22 ){
       x = 136;
+      rooms(room, 1);
     }
+    //Right
     if(x >= 140 && x <= 144){
       x = -14;
+      rooms(room, 2);
     }
 
+    //The arrow will be shoing up if you hide for 20 frames.
     if(x <= -10 || x >= 128){
       if(arrowCounter <= 20){
         arrowCounter++;
@@ -300,7 +306,7 @@
 
     //This detect if pixen guy is touching  the cloud
     if(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
-      
+      arduboy.tunes.tone(880, 80);
     }
 
     cloud_x = cloud_dx + cloud_x;
@@ -344,10 +350,39 @@
     
   }
 
+  void rooms(int r, int where){ //r is the room and where is the side that you´r going
+    room = r;
+
+    //Where 1 == left && Where 2 == right
+    if(where == 2 && !(room == 3)){
+      room++;
+    }
+    else if(where == 1){
+      room--;
+    }
+    
+    if(room == 1){
+      if(x <= 3){
+        x = 3;
+      }
+    }
+    else if(room == 2){
+      fire();
+    }
+    else if(room == 3){
+      cloud();
+      if(x >= 113){
+        x = 113;
+      }
+    }
+    else{
+      room = 1;
+    }
+  }
+
   void sentences(){
     notVisible();
-//    cloud();
-    fire();
+    rooms(room, 3);
     
     if(arduboy.pressed(UP_BUTTON) || arduboy.pressed(A_BUTTON)){
       firstJumpFrame();
@@ -371,9 +406,9 @@
   }
 
   void loopSentences(){
-    if(!onGround()){
-      fall();
-    }
+//    if(!onGround()){
+//      fall();
+//    }
     
     if(jumping){
       y -= 4;
@@ -529,7 +564,7 @@
     }
     
 //    arduboy.setCursor(0, 0);
-//    arduboy.print(vel);
+//    arduboy.print(room);
 //    arduboy.setCursor(0, 8);
 //    arduboy.print(x);
 //    arduboy.setCursor(0, 16);
