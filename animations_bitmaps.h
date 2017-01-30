@@ -44,6 +44,13 @@ extern const unsigned char stopR[];
 
 extern const unsigned char cloud_1[];
 
+extern const unsigned char fire_1[];
+extern const unsigned char fire_2[];
+extern const unsigned char fire_3[];
+extern const unsigned char fire_4[];
+extern const unsigned char fire_5[];
+extern const unsigned char fire_6[];
+
 #endif
 
   

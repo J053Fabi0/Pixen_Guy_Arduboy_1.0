@@ -24,11 +24,15 @@
   float cloud_x = 58;
   float cloud_dx = 0.1;
   float cloud_acx = -0.2;
+
+  float fire_x = 35;
+  float fire_y = 42; //42 is the ground of the fire
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
-  int walkFase = 1;
   int ground = 45; //45 is the ground of the pixel guy
   
+  int walkFase = 1;
+  int fireFase = 1;
   int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
   int arrowCounter = 0;
 
@@ -304,9 +308,46 @@
     arduboy.drawBitmap(cloud_x, cloud_y, cloud_1, 17, 7, WHITE);
   }
 
+  void fire(){
+    if(fireFase >= 1 && fireFase <= 3){
+      arduboy.drawBitmap(fire_x, fire_y, fire_1, 7, 22, 1);
+      fireFase++;
+    }else if(fireFase >= 4 && fireFase <= 6){
+      arduboy.drawBitmap(fire_x, fire_y, fire_2, 7, 22, 1);
+      fireFase++;
+    }else if(fireFase >= 7 && fireFase <= 9){
+      arduboy.drawBitmap(fire_x, fire_y, fire_3, 7, 22, 1);
+      fireFase++;
+    }else if(fireFase >= 10 && fireFase <= 13){
+      arduboy.drawBitmap(fire_x, fire_y, fire_4, 7, 22, 1);
+      fireFase++;
+    }else if(fireFase >= 14 && fireFase <= 16){
+      arduboy.drawBitmap(fire_x, fire_y, fire_5, 7, 22, 1);
+      fireFase++;
+    }else if(fireFase >= 17 && fireFase <= 19){
+      arduboy.drawBitmap(fire_x, fire_y, fire_6, 7, 22, 1);
+      fireFase++;
+    }else{
+      fireFase = 1;
+      arduboy.drawBitmap(fire_x, fire_y, fire_1, 7, 22, 1);
+    }
+
+    //This detect if the fire is touching you
+    if(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) )){
+      arduboy.tunes.tone(880, 80);
+    }
+
+    //This move the fite slowly to the center
+    if(fire_x < 58){
+      fire_x = fire_x + 0.1;
+    }
+    
+  }
+
   void sentences(){
     notVisible();
-    cloud();
+//    cloud();
+    fire();
     
     if(arduboy.pressed(UP_BUTTON) || arduboy.pressed(A_BUTTON)){
       firstJumpFrame();
