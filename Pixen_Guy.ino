@@ -1,19 +1,24 @@
-  #include <Arduboy.h>
+  #include <Arduboy2.h>
+  #include <ArduboyPlaytune.h>
   #include "animations_bitmaps.h"
   
-  Arduboy arduboy;
+  Arduboy2 arduboy;
+  ArduboyPlaytune tunes(arduboy.audio.enabled);
   
   #define WIDTH 12
   #define HEIGHT 18
   
   #define ACELERACION 0.2
   #define VELOCIDAD_MAX 3
+  #define CAIDA_MAX 12 
   
   #define XTAM 128 //El tamaño de la pantalla
   #define YTAM 64
   #define GRAV 0.4
 
   #define CLOUD_VELOCIDAD_MAX 2
+
+  #define GROUND 45
   
   float x = 58; //Pixen Guy x is 58, but we use this variable to move the boot logo
   float vel = 0;
@@ -25,8 +30,8 @@
   float cloud_dx = 0.1;
   float cloud_acx = -0.2;
 
-  float fire_x = 35;
-  float fire_y = 42; //42 is the ground of the fire
+  float fire_x = 58;
+  float fire_y = 41; //41 is the ground of the fire
   
   int guy_dir = 2; //Guy direction: 1 == left, 2 == right
   int ground = 45; //45 is the ground of the pixel guy
@@ -34,8 +39,9 @@
   
   int walkFase = 1;
   int fireFase = 1;
-  int counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
-  int arrowCounter = 0;
+  
+  int counter = 0; //Is use it to make a simple loop, like the "i" in a "for" loop
+  int arrowCounter = 0; //The arrow that shows up when you are hide an a corner
 
   bool login = 1; //Boot is true at the beginning
   float xBootLogo = 0;
@@ -49,8 +55,11 @@
   bool des = false;       //Is guy decelerating?
   
   void setup() {
-    arduboy.beginNoLogo();
-    arduboy.setFrameRate(30); //Default is 30
+    arduboy.boot();
+    arduboy.blank();
+    arduboy.flashlight();
+    arduboy.audio.begin();
+    arduboy.setFrameRate(30); //Default is 30    
   }
 
   void moveLogo(){
@@ -155,27 +164,33 @@
     
     gRunning = true;
   }
-
   
   void stand(){//pixel
-    if(guy_dir == 1){
-      arduboy.drawBitmap(x, y, standingL, WIDTH, HEIGHT, 1);
-    }else if(guy_dir == 2){
-      arduboy.drawBitmap(x, y, standingR, WIDTH, HEIGHT, 1);
+    if(!jumping){
+      if(guy_dir == 1){
+        arduboy.drawBitmap(x, y, standingL, WIDTH, HEIGHT, 1);
+      }else if(guy_dir == 2){
+        arduboy.drawBitmap(x, y, standingR, WIDTH, HEIGHT, 1);
+      }
     }
   }
 
   void notVisible(){//pixel
-    //Left
+    //Left of the room
     if(x <= -18 && x >= -22 ){
       x = 136;
       rooms(room, 1);
     }
-    //Right
+    //Right of the room
     if(x >= 140 && x <= 144){
       x = -14;
       rooms(room, 2);
     }
+    //Down
+    if(y > 64){
+      y = -20;
+    }
+    
 
     //The arrow will be shoing up if you hide for 20 frames.
     if(x <= -10 || x >= 128){
@@ -205,14 +220,14 @@
   }
 
   void doDoubleJump(){//jump
-    if(doubleJump && !onGround()){
+    if(doubleJump && !onGround(ground)){
     dy = -1.7/2 +0.2;
     doubleJump = false;
     }
   }
 
-  boolean onGround(){
-    if(y < ground){
+  boolean onGround(int iGround){
+    if(y < iGround){
       return false;
     }
     else{
@@ -221,9 +236,9 @@
   }
 
   void startJump(){//jump
-    if(onGround()){
+    if(onGround(ground)){
       dy = -1.7/2 +0.1; //El primer impulso
-      y = ground; //YTAM - HEIGHT -3
+      y = ground;
     }
   }
 
@@ -236,7 +251,7 @@
 
   void firstJumpFrame(){//jump
     if(dy == 0.0){
-      if(!onGround){
+      if(!onGround(ground)){
         y = ground;
       }
       if(guy_dir == 1){
@@ -264,18 +279,18 @@
   }
 
   void jump(){//jump
-    dy += GRAV;
-    y += dy;
-    if(y <= 0){
-      y = 0;
+    if(dy < CAIDA_MAX){
+      dy += GRAV;
     }
+    else{
+      dy = CAIDA_MAX;
+    }
+
+//    dy += GRAV;
+    
+    y += dy;
     
     jumpFrames();
-  }
-
-  void fall(){
-    firstJumpFrame();
-    jumping = true;
   }
 
   void cloud(){
@@ -308,7 +323,10 @@
 
     //This detect if pixen guy is touching  the cloud
     if(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
-      arduboy.tunes.tone(880, 80);
+      //Parameters red,green,blue
+      arduboy.setRGBled(2, 0, 2);
+    }else if(!(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) ))){
+      arduboy.setRGBled(0, 0, 0);
     }
 
     cloud_x = cloud_dx + cloud_x;
@@ -316,10 +334,11 @@
     arduboy.drawBitmap(cloud_x, cloud_y, cloud_1, 17, 7, WHITE);
   }
 
-  void fire(){
+  void fire(){ //El fuego tiene 6 imagenes diferentes. fireFase determina en que fase está para asignar a su respectivo frame.
     if(fireFase >= 1 && fireFase <= 3){
       arduboy.drawBitmap(fire_x, fire_y, fire_1, 7, 22, 1);
       fireFase++;
+      fire_y = 40;
     }else if(fireFase >= 4 && fireFase <= 6){
       arduboy.drawBitmap(fire_x, fire_y, fire_2, 7, 22, 1);
       fireFase++;
@@ -329,6 +348,7 @@
     }else if(fireFase >= 10 && fireFase <= 13){
       arduboy.drawBitmap(fire_x, fire_y, fire_4, 7, 22, 1);
       fireFase++;
+      fire_y = 39;
     }else if(fireFase >= 14 && fireFase <= 16){
       arduboy.drawBitmap(fire_x, fire_y, fire_5, 7, 22, 1);
       fireFase++;
@@ -342,44 +362,76 @@
 
     //This detect if the fire is touching you
     if(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) )){
-      arduboy.tunes.tone(880, 80);
+      //Parameters red,green,blue
+      arduboy.setRGBled(2, 0, 0);
     }
-
-    //This move the fite slowly to the center
-    if(fire_x < 58){
-      fire_x = fire_x + 0.1;
+    else if(!(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) ))){ //Si no está tocando la nuve
+        arduboy.setRGBled(0, 0, 0);
     }
-    
   }
 
-  void rooms(int r, int where){ //r is the room and where is the side that you´r going
+  void rooms(int r, int where){ //r is the room you are and where is the side that you´r going
     room = r;
 
-    //Where 1 == left && Where 2 == right
-    if(where == 2 && !(room == 3)){
+    //(where == 1) is left and (where == 2) is right
+    if(where == 2){
       room++;
     }
     else if(where == 1){
       room--;
     }
-    
-    if(room == 1){
-      if(x <= 3){
-        x = 3;
-      }
-      arduboy.drawBitmap(64-32, 5, miniPGLogo, 63, 9, 1);
-    }
-    else if(room == 2){
-      fire();
-    }
-    else if(room == 3){
-      cloud();
-      if(x >= 113){
-        x = 113;
-      }
-    }
-    else{
-      room = 1;
+
+    switch(room){ //This is where rooms are made
+      case 1:
+        ground = 45;
+        arduboy.drawBitmap(64-32, 5, miniPGLogo, 63, 9, 1);
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+        break;
+        
+      case 2:
+        ground = 45;
+        fire();
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+        break;
+        
+      case 3:
+        ground = 45;
+        cloud_y = 30;
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+        cloud();
+        break;
+        
+      case 4:
+        arduboy.drawFastHLine(0, 63, 49, WHITE);
+        arduboy.drawFastHLine(79, 63, 128, WHITE);
+        
+        if(x > 47 && x < 72 && onGround(GROUND)){
+          firstJumpFrame();
+          jumping = true;
+          ground = 90;
+        }
+        else if(!(x > 47 && x < 72) && y > 45){
+          ground = 45;
+        }
+        break;
+        
+      case 5:
+        ground = 45;
+        cloud_y = 50;
+        cloud();
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+        break;
+
+      default:
+        if(room > 5){
+          room = 1;
+        }
+        else if(room < 1){
+          room = 5;
+        }
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+        break;
+      
     }
   }
 
@@ -409,9 +461,6 @@
   }
 
   void loopSentences(){
-//    if(!onGround()){
-//      fall();
-//    }
     
     if(jumping){
       y -= 4;
@@ -439,7 +488,7 @@
         y = ground; //YTAM - HEIGHT -3
       }
     }
-    if(!onGround()){
+    if(!onGround(ground)){
       if(dy > 3){
         ascending = false;
         falling = true;
@@ -460,14 +509,13 @@
         vel -= ACELERACION;
         x += vel;
 
-        if(!jumping){
+        if(vel <= 0){
+          vel = 0;
+          gRunning = false;
+          stand();
+        }
 
-          if(vel <= 0){
-            vel = 0;
-            gRunning = false;
-            stand();
-          }
-          
+        if(!jumping){
           if(vel < 0){
             arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
           }
@@ -479,14 +527,14 @@
       else{
         vel += ACELERACION;
         x += vel;
+
+        if(vel >= 0){
+          vel = 0;
+          gRunning = false;
+          stand();
+        }
+        
         if(!jumping){
-          
-          if(vel >= 0){
-            vel = 0;
-            gRunning = false;
-            stand();
-          }
-          
           if(vel < 0){
             arduboy.drawBitmap(x, y, stopL, WIDTH, HEIGHT, 1);
           }
@@ -498,7 +546,6 @@
     }
 
   }
-
   
   void loop() {
     if (!(arduboy.nextFrame()))
@@ -513,8 +560,8 @@
       
       sentences();
       loopSentences();
-
-      arduboy.drawFastHLine(0, 63, 128, WHITE);
+      
+      
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////RESET////////////////////////////////////////////////////////////  
@@ -522,26 +569,41 @@
 
       if(arduboy.pressed(B_BUTTON)){ //Reset the game
         if(counter > 60){ //"For" loop where counter is "i"
-          x = 58;
+          x = 58; //Pixen Guy x is 58, but we use this variable to move the boot logo
           vel = 0;
-          y = 45;
-          dy = 0;
+          y = 45; //Pixen Guy default y is "ground"
+          dy = 0;   //Velocidad (lo que se le suma a y por frame)
           
-          guy_dir = 2;
-          walkFase = 1;
-          counter = 0;
-          ground = 45;
+          cloud_y = 30; //random(0, 10)
+          cloud_x = 58;
+          cloud_dx = 0.1;
+          cloud_acx = -0.2;
         
-          login = 1;
+          fire_x = 35;
+          fire_y = 42; //42 is the ground of the fire
+          
+          guy_dir = 2; //Guy direction: 1 == left, 2 == right
+          ground = 45; //45 is the ground of the pixel guy
+          room = 1;
+         
+          walkFase = 1;
+          fireFase = 1;
+          counter = 0; //Is use to make a simple loop, like the "i" in a "for" loop
+          arrowCounter = 0;
+        
+          login = 1; //Boot is true at the beginning
           xBootLogo = 0;
           
           doubleJump = true;
-          didEndJump = false;
+          didEndJump = false; //Was endJump called already?
           ascending = false;
           falling = false;
           gRunning = false;
           jumping = false;
-          des = false;  
+          des = false; 
+
+          arduboy.setRGBled(0, 0, 0);
+           
         }else{
           counter++;
 
@@ -565,11 +627,11 @@
       }
     
     }
-    
-//    arduboy.setCursor(0, 0);
-//    arduboy.print(room);
-//    arduboy.setCursor(0, 8);
-//    arduboy.print(x);
+   
+    arduboy.setCursor(0, 0);
+    arduboy.print(vel);
+    arduboy.setCursor(0, 8);
+    arduboy.print(dy);
 //    arduboy.setCursor(0, 16);
 //    arduboy.print(y);
     
