@@ -238,7 +238,7 @@
   void startJump(){//jump
     if(onGround(ground)){
       dy = -1.7/2 +0.1; //El primer impulso
-      y = ground;
+      y = GROUND;
     }
   }
 
@@ -252,7 +252,7 @@
   void firstJumpFrame(){//jump
     if(dy == 0.0){
       if(!onGround(ground)){
-        y = ground;
+        y = GROUND;
       }
       if(guy_dir == 1){
         arduboy.drawBitmap(x, y, jumpL, WIDTH, HEIGHT, 1);
@@ -485,7 +485,7 @@
         falling = false;
         ascending = false;
         dy = 0.0;
-        y = ground; //YTAM - HEIGHT -3
+        y = GROUND; //YTAM - HEIGHT -3
       }
     }
     if(!onGround(ground)){
@@ -628,10 +628,10 @@
     
     }
    
-    arduboy.setCursor(0, 0);
-    arduboy.print(vel);
-    arduboy.setCursor(0, 8);
-    arduboy.print(dy);
+//    arduboy.setCursor(0, 0);
+//    arduboy.print(vel);
+//    arduboy.setCursor(0, 8);
+//    arduboy.print(dy);
 //    arduboy.setCursor(0, 16);
 //    arduboy.print(y);
     
