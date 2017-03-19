@@ -54,6 +54,8 @@ extern const unsigned char fire_4[];
 extern const unsigned char fire_5[];
 extern const unsigned char fire_6[];
 
+extern const unsigned char umbrella[];
+
 #endif
 
   
