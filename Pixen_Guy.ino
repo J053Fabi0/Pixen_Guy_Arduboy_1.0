@@ -9,21 +9,21 @@
   #define HEIGHT 18
   
   #define ACELERACION 0.2
-  #define VELOCIDAD_MAX 3
   
   #define XTAM 128 //El tamaño de la pantalla
   #define YTAM 64
   #define GRAV 0.3 //0.4 was the correct
 
-  #define CLOUD_VELOCIDAD_MAX 2
+  #define CLOUD_velocidadMaxima 2
 
   #define GROUND 45
   
-  float x = 58; //Pixen Guy x is 58, but we use this variable to move the boot logo
+  float x = 58;
   float vel = 0;
   float y = 45; //Pixen Guy default y is "ground"
   float dy = 0;   //Velocidad (lo que se le suma a y por frame)
-  float caidaMaxima = 9; //5 is the less that can be and 9 is the correct
+  float caidaMaxima = 9;
+  float velocidadMaxima = 3;
   
   float cloud_y = 30; //random(0, 10)
   float cloud_x = 58;
@@ -54,6 +54,7 @@
   bool jumping = false; //Is jumping?
   bool des = false;       //Is guy decelerating?
   bool isOnHole = false; // Is on the hole of the room 4?
+  bool hasCeiling = true;
   
   void setup() {
     arduboy.boot();
@@ -140,13 +141,13 @@
   void walk(){//walk
     if(guy_dir == 2){
       vel += ACELERACION;
-      if (vel > VELOCIDAD_MAX) {
-        vel = VELOCIDAD_MAX;
+      if (vel > velocidadMaxima) {
+        vel = velocidadMaxima;
       }
     }else if(guy_dir == 1){
       vel -= ACELERACION;
-      if (vel < -VELOCIDAD_MAX) {
-        vel = -VELOCIDAD_MAX;
+      if (vel < -velocidadMaxima) {
+        vel = -velocidadMaxima;
       }
     }
     x += vel;
@@ -192,6 +193,11 @@
     //Down
     if(y > 74){
       y = -20;
+    }
+
+    if(hasCeiling && y <= 0){
+      y = 1;
+      dy -= -0.8; //Touching the ceiling stops the velocity
     }
     
 
@@ -338,13 +344,13 @@
   void cloud(){
 
     cloud_dx += cloud_acx;
-    if (cloud_dx > CLOUD_VELOCIDAD_MAX && cloud_acx > 0) {            //Move forwards and backwards
+    if (cloud_dx > CLOUD_velocidadMaxima && cloud_acx > 0) {            //Move forwards and backwards
       cloud_acx = cloud_acx * (-1);
-      cloud_dx = CLOUD_VELOCIDAD_MAX;
+      cloud_dx = CLOUD_velocidadMaxima;
     }
-    else if(cloud_dx < (CLOUD_VELOCIDAD_MAX * -1) && cloud_acx < 0){
+    else if(cloud_dx < (CLOUD_velocidadMaxima * -1) && cloud_acx < 0){
       cloud_acx = cloud_acx * (-1);
-      cloud_dx = CLOUD_VELOCIDAD_MAX * -1;
+      cloud_dx = CLOUD_velocidadMaxima * -1;
     }
         
     if(!(cloud_x+1 == x) || !(cloud_x-1 == x)){                       //Follow your x pos
@@ -364,12 +370,15 @@
     }
 
     //This detect if pixen guy is touching  the cloud
-    if(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) )){
-      //Parameters red,green,blue
-      arduboy.setRGBled(2, 0, 2);
+    if(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) ))
+    {
       caidaMaxima = 0.3;
-    }else if(!(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) ))){
-      arduboy.setRGBled(0, 0, 0);
+      velocidadMaxima = 0.3;
+      doubleJump = true;
+    }
+    else if(!(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) )))
+    {
+      velocidadMaxima = 3;
     }
 
     cloud_x = cloud_dx + cloud_x;
@@ -429,24 +438,31 @@
         ground = 45;
         arduboy.drawBitmap(64-32, 5, miniPGLogo, 63, 9, 1);
         arduboy.drawFastHLine(0, 63, 128, WHITE);
+        arduboy.drawFastHLine(0, 0, 128, WHITE);
+        hasCeiling = true;
         break;
         
       case 2:
         ground = 45;
         fire();
         arduboy.drawFastHLine(0, 63, 128, WHITE);
+        arduboy.drawFastHLine(0, 0, 128, WHITE);
+        hasCeiling = true;
         break;
         
       case 3:
         ground = 45;
         cloud_y = 30;
         arduboy.drawFastHLine(0, 63, 128, WHITE);
+        arduboy.drawFastHLine(0, 0, 128, WHITE);
+        hasCeiling = true;
         cloud();
         break;
         
       case 4:
         arduboy.drawFastHLine(0, 63, 49, WHITE);
         arduboy.drawFastHLine(79, 63, 128, WHITE);
+        hasCeiling = false;
         
         if(x > 47 && x < 72 && y >= GROUND -5){ //El -5 le quita un pequeño error que tenía al caer directamente en la grieta
           isOnHole = true;
@@ -484,6 +500,8 @@
         cloud_y = 50;
         cloud();
         arduboy.drawFastHLine(0, 63, 128, WHITE);
+        arduboy.drawFastHLine(0, 0, 128, WHITE);
+        hasCeiling = true;
         break;
 
       default:
