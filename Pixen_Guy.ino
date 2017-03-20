@@ -160,7 +160,7 @@
         arduboy.drawBitmap(x, y, stopR, WIDTH, HEIGHT, 1);
       }
       else{
-        if(!(arduboy.pressed(A_BUTTON) || arduboy.pressed(UP_BUTTON))){
+        if(!( arduboy.pressed(A_BUTTON) || arduboy.pressed(UP_BUTTON) )){
           nextWalkFrame(walkFase, guy_dir);
         }
       }
@@ -181,18 +181,29 @@
 
   void notVisible(){//pixel
     //Left of the room
-    if(x <= -18 && x >= -22 ){
+    if(x < -18){
       x = 136;
       rooms(room, 1);
     }
     //Right of the room
-    if(x >= 140 && x <= 144){
+    if(x > 140){
       x = -14;
       rooms(room, 2);
     }
-    //Down
-    if(y > 74){
-      y = -20;
+    
+    //If it go down
+    if(y > 64){
+      y = -18;
+      if(room == 4){
+        rooms(room, 6);
+      }
+    }
+    //If it go up
+    if(y < -18){
+      y = 64;
+      if(room == 6){
+        rooms(room, 4);
+      }
     }
 
     if(hasCeiling && y <= 0){
@@ -336,6 +347,7 @@
     }
     else{
       y += dy;
+      jumping = true;
     }
     
     jumpFrames();
@@ -376,6 +388,7 @@
       velocidadMaxima = 0.3;
       doubleJump = true;
     }
+    // Else if not touching the cloud
     else if(!(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) )))
     {
       velocidadMaxima = 3;
@@ -413,12 +426,18 @@
     }
 
     //This detect if the fire is touching you
-    if(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) )){
-      //Parameters red,green,blue
-      arduboy.setRGBled(2, 0, 0);
+    if(( (fire_y <= y+(HEIGHT-8) && fire_y >= y) || (y <= fire_y+14 && y >= fire_y) ) && ( (fire_x <= x+(WIDTH-2) && fire_x >= x) || (x <= fire_x+5 && x >= fire_x) ))
+    {
+      if(guy_dir == 1){
+        vel = 8;
+      }
+      if(guy_dir == 2){
+        vel = (-8);
+      }
     }
-    else if(!(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) ))){ //Si no está tocando la nuve
-        arduboy.setRGBled(0, 0, 0);
+    else if(!(( (cloud_y <= y+HEIGHT && cloud_y >= y) || (y <= cloud_y+7 && y >= cloud_y) ) && ( (cloud_x <= x+WIDTH && cloud_x >= x) || (x <= cloud_x+17 && x >= cloud_x) ))) //Si no está tocando la nuve
+    { 
+      
     }
   }
 
@@ -428,9 +447,15 @@
     //(where == 1) is left and (where == 2) is right
     if(where == 2){
       room++;
+      if(room == 6){
+        room = 1;
+      }
     }
     else if(where == 1){
       room--;
+    }
+    else if(where > 2){
+      room = where;
     }
 
     switch(room){ //This is where rooms are made
@@ -462,7 +487,8 @@
       case 4:
         arduboy.drawFastHLine(0, 63, 49, WHITE);
         arduboy.drawFastHLine(79, 63, 128, WHITE);
-        hasCeiling = false;
+        arduboy.drawFastHLine(0, 0, 128, WHITE);
+        hasCeiling = true;
         
         if(x > 47 && x < 72 && y >= GROUND -5){ //El -5 le quita un pequeño error que tenía al caer directamente en la grieta
           isOnHole = true;
@@ -494,7 +520,7 @@
           
         }
         break;
-        
+      
       case 5:
         ground = 45;
         cloud_y = 50;
@@ -504,6 +530,72 @@
         hasCeiling = true;
         break;
 
+      case 6: //Cuarto de abajo
+        ground = 45;
+        
+        arduboy.drawBitmap(52, 56, trampoline, 25, 8, 1);
+        
+        //Techo
+        arduboy.drawFastHLine(0, 0, 49, WHITE);
+        arduboy.drawFastHLine(79, 0, 128, WHITE);
+        hasCeiling = false; //Si tiene, pero le falta un poco, por eso lo ponemos en false
+        
+        //Paredes
+        arduboy.drawFastVLine(0, 0, 64, WHITE);
+        arduboy.drawFastVLine(127, 0, 64, WHITE);
+        
+        //Piso
+        arduboy.drawFastHLine(0, 63, 128, WHITE);
+
+        //wont let you pass left
+        if(x < 1){
+          x = 1;
+          vel += 4.5;
+        }
+        //wont let you pass rigth
+        if(x > 117){
+          x = 117;
+          vel -= 4.5;
+        }
+        
+        //Touching the trampoline
+        if(y > 37 && (x > 42 && x < 77)){
+          dy = -11;
+          doubleJump = true;
+//          firstJumpFrame();
+        }
+
+        //The hole on the top
+        if(y < 2 && x > 47 && x < 72)
+        {
+          isOnHole = true;
+        }
+        
+        if(y >= 3 && isOnHole)
+        {
+          isOnHole = false;
+        }
+        
+        if( (x <= 47 || x >= 72) && isOnHole )
+        {
+          if(x <= 47){
+            x = 46;
+            vel = -0.5;
+          }
+          if(x >= 72){
+            x = 71;
+            vel = 0.5;
+          }
+        }
+
+        //Touching the ceiling
+        if(!isOnHole && y < 1){
+          y = 1;
+          dy -= -0.8; //Touching the ceiling stops the velocity
+        }
+        
+        break;
+        
       default:
         if(room > 5){
           room = 1;
@@ -512,13 +604,13 @@
           room = 5;
         }
         break;
-      
+        
     }
   }
 
   void sentences(){
     notVisible();
-    rooms(room, 3); //3 means nothing, this just call the function rooms
+    rooms(room, 0); //0 means nothing, this just call the function rooms
     
     if(arduboy.pressed(UP_BUTTON) || arduboy.pressed(A_BUTTON))
     {  
@@ -652,10 +744,12 @@
 
       if(arduboy.pressed(B_BUTTON)){ //Reset the game
         if(counter > 60){ //"For" loop where counter is "i"
-          x = 58; //Pixen Guy x is 58, but we use this variable to move the boot logo
+          x = 58;
           vel = 0;
           y = 45; //Pixen Guy default y is "ground"
           dy = 0;   //Velocidad (lo que se le suma a y por frame)
+          caidaMaxima = 9;
+          velocidadMaxima = 3;
           
           cloud_y = 30; //random(0, 10)
           cloud_x = 58;
@@ -675,16 +769,18 @@
           counter = 0; //Is use it to make a simple loop, like the "i" in a "for" loop
           arrowCounter = 0; //The arrow that shows up when you are hide an a corner
         
-          login = 1; //Boot is true at the beginning
-          xBootLogo = 0;
+          login = true; //Boot is true at the beginning
+          xBootLogo = 0; //The x pos of the boot logo
           
-          doubleJump = true;
+          doubleJump = true; //Can do doubleJump or not?
           didEndJump = false; //Was endJump called already?
-          ascending = false;
-          falling = false;
-          gRunning = false;
-          jumping = false;
+          ascending = false; //Is ascending? (going up and not falling)
+          falling = false; // Is falling?
+          gRunning = false; //Is guy running?
+          jumping = false; //Is jumping?
           des = false;       //Is guy decelerating?
+          isOnHole = false; // Is on the hole of the room 4?
+          hasCeiling = true;
 
           arduboy.setRGBled(0, 0, 0);
            
@@ -713,11 +809,11 @@
     }
    
 //    arduboy.setCursor(0, 0);
-//    arduboy.print(jumping);
+//    arduboy.print(isOnHole);
 //    arduboy.setCursor(0, 8);
-//    arduboy.print(" As: " + ascending);
+//    arduboy.print(jumping);
 //    arduboy.setCursor(0, 16);
-//    arduboy.print(" Holes: + "isOnHole);
+//    arduboy.print(gRunning);
     
 //    arduboy.setCursor(40, 0);
 //    arduboy.print(ascending);

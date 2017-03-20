@@ -9,20 +9,11 @@ extern const unsigned char standingR[];
 
 extern const unsigned char standingL[];
 
-
 extern const unsigned char fallR[];
 extern const unsigned char jumpR[];
 
 extern const unsigned char fallL[];
 extern const unsigned char jumpL[];
-
-
-extern const unsigned char dockR1[];
-extern const unsigned char dockR2[];
-
-extern const unsigned char dockL1[];
-extern const unsigned char dockL2[];
-
 
 extern const unsigned char costumeL1[];
 extern const unsigned char costumeL2[];
@@ -55,6 +46,8 @@ extern const unsigned char fire_5[];
 extern const unsigned char fire_6[];
 
 extern const unsigned char umbrella[];
+
+extern const unsigned char trampoline[];
 
 #endif
 
